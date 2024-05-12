@@ -1,0 +1,222 @@
+version: '3.8'
+
+services:
+  #php_usuarios
+  php_usuarios:
+    container_name: php_8.2_apache_usuarios
+    build: ./usuarios
+    ports:
+      - 8081:80
+    volumes:
+      - ./usuarios/www:/var/www/html
+    networks:
+      - usuarios_bbdd
+      - api-gateaway
+    depends_on:
+      - bbdd_usuarios
+  #php_productos
+  php_productos:
+    container_name: php_8.2_apache_productos
+    build: ./productos
+    ports:
+      - 8082:80
+    volumes:
+      - ./productos/www:/var/www/html
+    networks:
+      - productos_bbdd
+      - api-gateaway
+    depends_on:
+      - bbdd_productos
+      
+  #php_clientes
+  php_clientes:
+    container_name: php_8.2_apache_clientes
+    build: ./clientes
+    ports:
+      - 8083:80
+    volumes:
+      - ./clientes/www:/var/www/html
+    networks:
+      - clientes_bbdd
+      - api-gateaway
+    depends_on:
+      - bbdd_clientes
+  
+  #php_pagos
+  php_pagos:
+    container_name: php_8.2_apache_pagos
+    build: ./pagos
+    ports:
+      - 8084:80
+    volumes:
+      - ./pagos/www:/var/www/html
+    networks:
+      - pedidos_pagos
+  #php_pedidos
+  php_pedidos:
+    container_name: php_8.2_apache_pedidos
+    build: ./pedidos
+    ports:
+      - 8085:80
+    volumes:
+      - ./pedidos/www:/var/www/html
+    networks:
+      - pedidos_bbdd
+      - pedidos_pagos
+      - pedidos_recomendaciones
+      - api-gateaway
+    depends_on:
+      - bbdd_pedidos
+  #flask-recomendaciones
+  flask-recomendaciones:
+    container_name: flask_recomendaciones
+    build: ./recomendaciones
+    ports:
+      - 5000:5000
+    volumes:
+      - ./recomendaciones/app:/var/www/html
+    environment:
+      MYSQL_HOST: mysql_8.3.0_recomendaciones
+      MYSQL_USER: root 
+      MYSQL_PASSWORD: password
+      MYSQL_DB: recomendaciones
+    networks:
+      - recomendaciones_bbdd
+      - pedidos_recomendaciones
+      - api-gateaway
+    depends_on:
+      - bbdd_recomendaciones
+  
+
+ #python-integracion
+  python-integracion:
+    container_name: python_integracion
+    build: ./integracion
+    ports:
+      - 5001:5001
+    volumes:
+      - ./integracion/app:/var/www/html
+    networks:
+      - api-gateaway
+    
+  #api gate-way
+  api_gateway:
+    build:
+      context: ./api_gateway
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    volumes:
+      - ./api_gateway/www:/var/www/html
+    networks:
+      - api-gateaway
+   
+  #MySQL
+  bbdd_usuarios:
+    image: mysql:8.3.0
+    container_name: mysql_8.3.0_usuarios
+    restart: always
+    volumes:
+      - ./usuarios/bbdd_usuarios:/var/lib/mysql
+      - ./usuarios/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: usuarios
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3307:3306"
+    networks:
+      - usuarios_bbdd
+      - api-gateaway
+  #MySQL
+  bbdd_productos:
+    image: mysql:8.3.0
+    container_name: mysql_8.3.0_productos
+    restart: always
+    volumes:
+      - ./productos/bbdd_productos:/var/lib/mysql
+      - ./productos/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: productos
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3308:3306"
+    networks:
+      - productos_bbdd
+  #MySQL
+  bbdd_clientes:
+    image: mysql:8.3.0
+    container_name: mysql_8.3.0_clientes
+    restart: always
+    volumes:
+      - ./clientes/bbdd_clientes:/var/lib/mysql
+      - ./clientes/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: clientes
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3309:3306"
+    networks:
+      - clientes_bbdd
+  #MySQL
+  bbdd_pedidos:
+    image: mysql:8.3.0
+    container_name: mysql_8.3.0_pedidos
+    restart: always
+    volumes:
+      - ./pedidos/bbdd_pedidos:/var/lib/mysql
+      - ./pedidos/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: pedidos
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3310:3306"
+    networks:
+      - pedidos_bbdd
+  #MySQL
+  bbdd_recomendaciones:
+    image: mysql:8.3.0
+    container_name: mysql_8.3.0_recomendaciones
+    volumes:
+      - ./recomendaciones/bbdd_recomendaciones:/var/lib/mysql
+      - ./recomendaciones/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: recomendaciones
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3311:3306"
+    networks:
+      - recomendaciones_bbdd
+  
+  #redis
+  redis:
+    image: 'redislabs/redismod'
+    container_name: cache_redis
+    ports:
+      - '6379:6379'
+    networks:
+      - api-gateaway
+ 
+networks:
+  usuarios_bbdd:
+    driver: bridge
+  productos_bbdd:
+    driver: bridge
+  clientes_bbdd:
+    driver: bridge
+  pedidos_pagos:
+    driver: bridge
+  pedidos_bbdd:
+    driver: bridge
+  recomendaciones_bbdd:
+    driver: bridge
+  pedidos_recomendaciones:
+    driver: bridge
+  api-gateaway:
+    driver: bridge
+
+  

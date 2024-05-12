@@ -1,0 +1,29 @@
+# Utiliza una imagen base de Python
+FROM python:3.10
+
+# Establece las variables de entorno
+ENV MYSQL_HOST="mysql_8.3.0_recomendaciones"
+ENV MYSQL_USER="root"
+ENV MYSQL_PASSWORD="password"
+ENV MYSQL_DB="recomendaciones"
+
+# Establece la variable de entorno para la aplicación Flask
+ENV FLASK_APP=app.py
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /usr/src/app
+
+# Copia los archivos de plantillas
+#COPY requirements.txt ./
+#COPY app.py ./
+#COPY templates/ ./templates/
+COPY app/ ./
+
+# Instala las dependencias de la aplicación
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expone el puerto en el que se ejecuta la aplicación Flask
+EXPOSE 5000
+
+# Comando para ejecutar la aplicación Flask
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

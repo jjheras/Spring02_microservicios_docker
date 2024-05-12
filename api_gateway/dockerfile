@@ -1,0 +1,11 @@
+# Dockerfile de la API Gateway
+FROM php:8.0-apache
+
+# Copiar archivos de la aplicación
+COPY ./www /var/www/html
+
+# Exponer el puerto del servidor web
+EXPOSE 80
+
+# Comando de inicio del contenedor
+CMD ["apache2-foreground"]
